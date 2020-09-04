@@ -70,10 +70,17 @@ WHERE e.phone_number  LIKE '600%';
 -- Book 2 Ch. 3
 -- Practice: Carnival
 -- Get a list of the sales that was made for each sales type.
+SELECT s.*
+FROM sales s
+JOIN salestypes st ON st.sales_type_id = s.sales_type_id
 
 -- Get a list of sales with the VIN of the vehicle, the first name and last name of the customer,
 -- first name and last name of the employee who made the sale and the name, city and state of the dealership.
-SELECT v.vin, bt.name as bodytype, ma.name as make, mo.name as model
+SELECT
+	v.vin,
+	bt.name as bodytype,
+	ma.name as make,
+	mo.name as model
 FROM vehicles v
 JOIN vehicletypes vt ON v.vehicle_type_id = vt.vehicle_type_id
 JOIN vehiclebodytypes bt ON vt.body_type_id = bt.vehicle_body_type_id
@@ -81,11 +88,24 @@ JOIN vehiclemakes ma ON vt.make_id = ma.vehicle_make_id
 JOIN vehiclemodels mo ON vt.model_id = mo.vehicle_model_id;
 
 -- Get a list of all the dealerships and the employees, if any, working at each one.
-SELECT d.business_name, CONCAT(e.first_name, ' ', e.last_name) as employee_name
+SELECT
+	d.business_name,
+	CONCAT(e.first_name, ' ', e.last_name) as employee_name
 FROM dealershipEmployees de
-RIGHT JOIN dealerships d ON d.dealership_id = de.dealership_id
+LEFT JOIN dealerships d ON d.dealership_id = de.dealership_id
 LEFT JOIN employees e ON e.employee_id = de.employee_id;
+
 -- Get a list of vehicles with the names of the body type, make, model and color.
+SELECT
+	v.vin,
+	bt.name,
+	ma.name,
+	mo.name
+FROM vehicles v
+JOIN vehicletypes vt ON vt.vehicle_type_id = v.vehicle_type_id
+JOIN vehiclebodytypes bt ON vt.body_type_id = bt.vehicle_body_type_id
+JOIN vehiclemakes ma ON vt.make_id = ma.vehicle_make_id
+JOIN vehiclemodels mo ON vt.model_id = mo.vehicle_model_id
 
 -- Book 2 Ch. 4
 -- Practice: Sales Type by Dealership
@@ -94,8 +114,10 @@ SELECT d.dealership_id, d.business_name, COUNT(st.name) AS purchase
 FROM dealerships d
 JOIN sales s ON d.dealership_id = s.dealership_id
 JOIN salestypes st ON s.sales_type_id = st.sales_type_id
-WHERE st.sales_type_id = 2
-GROUP BY d.dealership_id;
+WHERE st.sales_type_id = 1
+GROUP BY d.dealership_id
+ORDER BY d.dealershiop_id;
+
 
 -- Practice: Leased Types
 -- Produce a report that determines the most popular vehicle model that is leased.
@@ -119,6 +141,7 @@ ORDER BY COUNT(s.sale_id) DESC;
 -- Book 2 Ch. 8
 -- Purchase Income by Dealership
 -- Write a query that shows the total purchase sales income per dealership.
+
 -- Write a query that shows the purchase sales income per dealership for the current month.
 -- Write a query that shows the purchase sales income per dealership for the current year.
 
@@ -131,3 +154,24 @@ ORDER BY COUNT(s.sale_id) DESC;
 
 -- Total Income by Employee
 -- Write a query that shows the total income (purchase and lease) per employee.
+
+
+
+-- Book 2 Ch. 12
+-- Practice: Carnival
+-- Create a view that lists all vehicle body types, makes and models.
+CREATE VIEW automobiles AS
+	SELECT
+		bt.name AS body,
+		ma.name AS make,
+		mo.name AS model
+	FROM vehicletypes vt
+	JOIN vehiclebodytypes bt ON vt.body_type_id = bt.vehicle_body_type_id
+	JOIN vehiclemakes ma ON vt.make_id = bt.vehicle_body_type_id
+	JOIN vehiclemodels mo ON vt.model_id = mo.vehicle_model_id;
+
+
+-- Create a view that shows the total number of employees for each employee type.
+-- Create a view that lists all customers without exposing their emails, phone numbers and street address.
+-- Create a view named sales2018 that shows the total number of sales for each sales type for the year 2018.
+-- Create a view that shows the employee at each dealership with the most number of sales.
