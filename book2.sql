@@ -133,28 +133,101 @@ ORDER BY COUNT(s.sale_id) DESC;
 
 -- Practice: Who Sold What
 -- What is the most popular vehicle make in terms of number of sales?
-
+SELECT ma.name, COUNT(s.sale_id) AS sale_count
+FROM sales s
+JOIN salestypes st ON s.sales_type_id = st.sales_type_id
+JOIN vehicles v ON s.vehicle_id = v.vehicle_id
+JOIN vehicletypes vt ON v.vehicle_type_id = vt.vehicle_type_id
+JOIN vehiclemakes ma ON vt.make_id = ma.vehicle_make_id
+GROUP BY ma.vehicle_make_id
+ORDER BY COUNT(s.sale_id) DESC;
 
 -- Which employee type sold the most of that make?
+
 
 
 -- Book 2 Ch. 8
 -- Purchase Income by Dealership
 -- Write a query that shows the total purchase sales income per dealership.
 
--- Write a query that shows the purchase sales income per dealership for the current month.
--- Write a query that shows the purchase sales income per dealership for the current year.
+SELECT
+	d.business_name,
+	COUNT(s.sale_id) AS num_sales,
+	SUM(s.price) AS income
+FROM sales s
+JOIN dealerships d ON d.dealership_id = s.dealership_id
+JOIN salestypes st ON s.sales_type_id = st.sales_type_id
+WHERE st.sales_type_id = 1
+GROUP BY s.sales_type_id, d.business_name
+ORDER BY SUM(s.price) DESC;
 
+-- Write a query that shows the purchase sales income per dealership for the current month.
+SELECT
+	d.dealership_id,
+    SUM(s.price)
+FROM sales s
+    JOIN dealerships d ON d.dealership_id = s.dealership_id
+WHERE EXTRACT(MONTH FROM s.purchase_date) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(YEAR FROM s.purchase_date) = EXTRACT(MONTH FROM CURRENT_DATE) AND s.sales_type_id = 1
+GROUP BY d.dealership_id
+ORDER BY d.dealership_id;
+
+-- Write a query that shows the purchase sales income per dealership for the current year.
+SELECT
+	d.dealership_id,
+    SUM(s.price)
+FROM sales s
+    JOIN dealerships d ON d.dealership_id = s.dealership_id
+	JOIN salestypes st ON st.sales_type_id = s.sales_type_id
+	WHERE EXTRACT(YEAR FROM s.purchase_date) = EXTRACT(YEAR FROM CURRENT_DATE) AND s.sales_type_id = 1
+	GROUP BY d.dealership_id
+	ORDER BY d.dealership_id;
 
 -- Lease Income by Dealership
 -- Write a query that shows the total lease income per dealership.
--- Write a query that shows the lease income per dealership for the current month.
--- Write a query that shows the lease income per dealership for the current year.
+SELECT
+	d.business_name,
+	COUNT(s.sale_id) AS num_leases,
+	SUM(s.price) AS income
+FROM sales s
+JOIN dealerships d ON d.dealership_id = s.dealership_id
+JOIN salestypes st ON s.sales_type_id = st.sales_type_id
+WHERE st.sales_type_id = 2
+GROUP BY s.sales_type_id, d.business_name
+ORDER BY SUM(s.price) DESC;
 
+
+-- Write a query that shows the lease income per dealership for the current month.
+SELECT
+	d.dealership_id,
+    SUM(s.price)
+FROM sales s
+    JOIN dealerships d ON d.dealership_id = s.dealership_id
+WHERE EXTRACT(MONTH FROM s.purchase_date) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(YEAR FROM s.purchase_date) = EXTRACT(MONTH FROM CURRENT_DATE) AND s.sales_type_id = 2
+GROUP BY d.dealership_id
+ORDER BY d.dealership_id;
+
+
+-- Write a query that shows the lease income per dealership for the current year.
+SELECT
+	d.dealership_id,
+    SUM(s.price)
+FROM sales s
+    JOIN dealerships d ON d.dealership_id = s.dealership_id
+	JOIN salestypes st ON st.sales_type_id = s.sales_type_id
+	WHERE EXTRACT(YEAR FROM s.purchase_date) = EXTRACT(YEAR FROM CURRENT_DATE) AND s.sales_type_id = 2
+	GROUP BY d.dealership_id
+	ORDER BY d.dealership_id;
 
 -- Total Income by Employee
 -- Write a query that shows the total income (purchase and lease) per employee.
-
+SELECT
+	CONCAT(e.first_name, ' ', e.last_name) AS employee_name,
+	COUNT(s.sale_id) AS num_sales,
+	SUM(s.price) AS income
+FROM sales s
+JOIN employees e ON s.employee_id = e.employee_id
+GROUP BY employee_name
+ORDER BY SUM(s.price) DESC;
 
 
 -- Book 2 Ch. 12
