@@ -171,6 +171,17 @@ WHERE EXTRACT(MONTH FROM s.purchase_date) = EXTRACT(MONTH FROM CURRENT_DATE) AND
 GROUP BY d.dealership_id
 ORDER BY d.dealership_id;
 
+SELECT
+  d.business_name,
+  SUM(s.price)
+FROM
+  sales s
+  JOIN dealerships d ON s.dealership_id = d.dealership_id
+WHERE
+  date_part('month', s.purchase_date) = date_part('month', CURRENT_DATE) -- AND date_part('year', s.purchase_date) = date_part('year', CURRENT_DATE)
+GROUP BY
+  d.dealership_id;
+
 -- Write a query that shows the purchase sales income per dealership for the current year.
 SELECT
 	d.dealership_id,
@@ -181,6 +192,17 @@ FROM sales s
 	WHERE EXTRACT(YEAR FROM s.purchase_date) = EXTRACT(YEAR FROM CURRENT_DATE) AND s.sales_type_id = 1
 	GROUP BY d.dealership_id
 	ORDER BY d.dealership_id;
+
+SELECT
+  d.business_name,
+  SUM(s.price)
+FROM
+  sales s
+  JOIN dealerships d ON s.dealership_id = d.dealership_id
+WHERE
+  date_part('year', s.purchase_date) = date_part('year', CURRENT_DATE)
+GROUP BY
+  d.dealership_id;
 
 -- Lease Income by Dealership
 -- Write a query that shows the total lease income per dealership.
@@ -196,6 +218,18 @@ GROUP BY s.sales_type_id, d.business_name
 ORDER BY SUM(s.price) DESC;
 
 
+SELECT
+  d.business_name,
+  SUM(s.price)
+FROM
+  sales s
+  JOIN dealerships d ON s.dealership_id = d.dealership_id
+  JOIN salestypes st ON s.sales_type_id = st.sales_type_id
+WHERE
+  LOWER(st.name) LIKE '%lease%'
+GROUP BY
+  d.dealership_id;
+
 -- Write a query that shows the lease income per dealership for the current month.
 SELECT
 	d.dealership_id,
@@ -206,6 +240,18 @@ WHERE EXTRACT(MONTH FROM s.purchase_date) = EXTRACT(MONTH FROM CURRENT_DATE) AND
 GROUP BY d.dealership_id
 ORDER BY d.dealership_id;
 
+SELECT
+  d.business_name,
+  SUM(s.price)
+FROM
+  sales s
+  JOIN dealerships d ON s.dealership_id = d.dealership_id
+  JOIN salestypes st ON s.sales_type_id = st.sales_type_id
+WHERE
+  LOWER(st.name) LIKE '%lease%'
+  AND date_part('month', s.purchase_date) = date_part('month', CURRENT_DATE) -- AND date_part('year', s.purchase_date) = date_part('year', CURRENT_DATE)
+GROUP BY
+  d.dealership_id;
 
 -- Write a query that shows the lease income per dealership for the current year.
 SELECT
@@ -229,6 +275,128 @@ JOIN employees e ON s.employee_id = e.employee_id
 GROUP BY employee_name
 ORDER BY SUM(s.price) DESC;
 
+-- Book 2 Ch. 10 Employee Recognition
+-- How many emloyees are there for each role?
+SELECT
+  et.name,
+  COUNT(e.employee_id)
+FROM
+  employeetypes et
+  JOIN employees e ON et.employee_type_id = e.employee_type_id
+GROUP BY
+  et.employee_type_id
+
+  -- How many finance managers work at each dealership?
+SELECT
+  d.business_name,
+  COUNT(e.employee_id)
+FROM
+  employeetypes et
+  JOIN employees e ON et.employee_type_id = e.employee_type_id
+  JOIN dealershipemployees de ON de.employee_id = e.employee_id
+  JOIN dealerships d ON de.dealership_id = d.dealership_id
+WHERE
+  LOWER(et.name) LIKE '%finance%'
+GROUP BY
+  d.dealership_id;
+
+-- Get the names of the top 3 employees who work shifts at the most dealerships?
+SELECT
+  e.first_name,
+  e.last_name,
+  COUNT(d.dealership_id)
+FROM
+  employees e
+  JOIN dealershipemployees de ON de.employee_id = e.employee_id
+  JOIN dealerships d ON de.dealership_id = d.dealership_id
+GROUP BY
+  e.employee_id
+ORDER BY
+  COUNT(d.dealership_id) DESC
+LIMIT
+  3;
+
+-- Get a report on the top two employees who has made the most sales through leasing vehicles.
+SELECT
+  e.first_name,
+  e.last_name,
+  COUNT(s.sale_id)
+FROM
+  employees e
+  JOIN sales s ON s.employee_id = e.employee_id
+  JOIN salestypes st ON s.sales_type_id = st.sales_type_id
+WHERE
+  LOWER(st.name) LIKE '%lease%'
+GROUP BY
+  e.employee_id
+ORDER BY
+  COUNT(s.sale_id) DESC
+LIMIT
+  2;
+
+-- Get a report on the the two employees who has made the least number of non-lease sales.
+SELECT
+  e.first_name,
+  e.last_name,
+  COUNT(s.sale_id)
+FROM
+  employees e
+  JOIN sales s ON s.employee_id = e.employee_id
+  JOIN salestypes st ON s.sales_type_id = st.sales_type_id
+WHERE
+  LOWER(st.name) NOT LIKE '%lease%'
+GROUP BY
+  e.employee_id
+ORDER BY
+  COUNT(s.sale_id) ASC
+LIMIT
+  2;
+
+-- Book 2 Ch. 11
+-- What are the top 5 US states with the most customers who have purchased a vehicle from a dealership participating in the Carnival platform?
+SELECT
+  c.state,
+  COUNT(s.sale_id)
+FROM
+  customers c
+  JOIN sales s ON s.customer_id = c.customer_id
+  JOIN dealerships d ON s.dealership_id = d.dealership_id
+GROUP BY
+  c.state
+ORDER BY
+  COUNT(s.sale_id) DESC
+LIMIT
+  5;
+
+  -- What are the top 5 US zipcodes with the most customers who have purchased a vehicle from a dealership participating in the Carnival platform?
+SELECT
+  c.zipcode,
+  COUNT(s.sale_id)
+FROM
+  customers c
+  JOIN sales s ON s.customer_id = c.customer_id
+  JOIN dealerships d ON s.dealership_id = d.dealership_id
+GROUP BY
+  c.zipcode
+ORDER BY
+  COUNT(s.sale_id) DESC
+LIMIT
+  5;
+
+-- What are the top 5 dealerships with the most customers?
+SELECT
+  d.business_name,
+  COUNT(c.customer_id)
+FROM
+  customers c
+  JOIN sales s ON s.customer_id = c.customer_id
+  JOIN dealerships d ON s.dealership_id = d.dealership_id
+GROUP BY
+  d.dealership_id
+ORDER BY
+  COUNT(c.customer_id) DESC
+LIMIT
+  5;
 
 -- Book 2 Ch. 12
 -- Practice: Carnival
@@ -248,3 +416,4 @@ CREATE VIEW automobiles AS
 -- Create a view that lists all customers without exposing their emails, phone numbers and street address.
 -- Create a view named sales2018 that shows the total number of sales for each sales type for the year 2018.
 -- Create a view that shows the employee at each dealership with the most number of sales.
+
