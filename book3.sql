@@ -131,7 +131,7 @@ CREATE TRIGGER new_sale_made
   EXECUTE PROCEDURE set_pickup_date();
 
 
-Book 3 Ch 6
+-- Book 3 Ch 6
 -- Because Carnival is a single company,
 -- we want to ensure that there is consistency in the data provided to the user.
 -- Each dealership has it's own website but we want to make sure the website URL are consistent and easy to remember.
@@ -144,7 +144,6 @@ CREATE OR REPLACE FUNCTION format_dealership_webiste()
   LANGUAGE PlPGSQL
 AS $$
 BEGIN
--- 	NEW.website := CONCAT('http://www.carnivalcars.com/', REGEXP_REPLACE(LOWER(NEW.business_name), '( ){1,}', '_', 'g'));
 	NEW.website := CONCAT('http://www.carnivalcars.com/', REPLACE(LOWER(NEW.business_name), ' ', '_'));
 
 	RETURN NEW;
@@ -160,3 +159,76 @@ INSERT INTO dealerships(business_name, phone, city, state, website, tax_id)
 VALUES ('New Dealership in Music City', '615-200-2000', 'Nashville', 'Tennessee', 'www.test.com', 'ab-200-2000');
 
 SELECT * FROM dealerships ORDER BY dealership_id DESC;
+
+-- If a phone number is not provided for a new dealership,
+-- set the phone number to the default customer care number 777-111-0305.
+
+CREATE OR replace FUNCTION default_phone_num()
+	RETURNS trigger
+	LANGUAGE plpgsql
+AS $$
+BEGIN
+
+	UPDATE dealerships
+	SET phone = '777-111-0305'
+	WHERE phone IS NULL;
+
+	RETURN NULL;
+
+END;
+$$
+
+CREATE trigger add_phone
+	AFTER INSERT
+	ON dealerships
+	for each row
+  EXECUTE PROCEDURE default_phone_num();
+
+-- Test
+
+INSERT INTO dealerships(business_name)
+VALUES('New dealership 3!');
+
+SELECT * FROM dealerships
+ORDER BY dealership_id DESC;
+
+SELECT * FROM dealerships;
+
+-- For accounting purposes, the name of the state needs to be part of the dealership's tax id.
+-- For example, if the tax id provided is bv-832-2h-se8w for a dealership in Virginia,
+-- then it needs to be put into the database as bv-832-2h-se8w--virginia.
+
+SELECT count(*) FROM dealerships
+WHERE tax_id NOT LIKE '%-%-%-%--%';
+
+CREATE OR replace FUNCTION update_tax_id()
+	RETURNS trigger
+	LANGUAGE plpgsql
+AS $$
+BEGIN
+
+	UPDATE dealerships
+	SET tax_id = concat(tax_id, '--', lower(state))
+	WHERE tax_id NOT LIKE '%-%-%-%--%';
+
+	RETURN null;
+
+END;
+$$
+
+CREATE trigger tax_id
+	AFTER INSERT OR UPDATE
+	ON dealerships
+	FOR EACH ROW
+	EXECUTE PROCEDURE update_tax_id();
+
+-- Test
+INSERT INTO dealerships(business_name)
+VALUES('new Dealership');
+
+UPDATE dealerships
+SET tax_id = concat(tax_id, '--', lower(state))
+WHERE dealership_id = 2;
+
+SELECT * FROM dealerships
+WHERE tax_id LIKE '%-%-%-%--%';
