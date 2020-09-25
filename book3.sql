@@ -187,7 +187,7 @@ CREATE trigger add_phone
 -- Test
 
 INSERT INTO dealerships(business_name)
-VALUES('New dealership 3!');
+VALUES('Dance Party Car Dealer');
 
 SELECT * FROM dealerships
 ORDER BY dealership_id DESC;
@@ -198,17 +198,17 @@ SELECT * FROM dealerships;
 -- For example, if the tax id provided is bv-832-2h-se8w for a dealership in Virginia,
 -- then it needs to be put into the database as bv-832-2h-se8w--virginia.
 
-SELECT count(*) FROM dealerships
+SELECT COUNT(*) FROM dealerships
 WHERE tax_id NOT LIKE '%-%-%-%--%';
 
-CREATE OR replace FUNCTION update_tax_id()
+CREATE OR REPLACE FUNCTION update_tax_id()
 	RETURNS trigger
 	LANGUAGE plpgsql
 AS $$
 BEGIN
 
 	UPDATE dealerships
-	SET tax_id = concat(tax_id, '--', lower(state))
+	SET tax_id = CONCAT(tax_id, '--', LOWER(state))
 	WHERE tax_id NOT LIKE '%-%-%-%--%';
 
 	RETURN null;
@@ -232,3 +232,20 @@ WHERE dealership_id = 2;
 
 SELECT * FROM dealerships
 WHERE tax_id LIKE '%-%-%-%--%';
+
+-- Ch. 3 Book 7
+-- Write a transaction to:
+-- Add a new role for employees called Automotive Mechanic
+-- Add five new mechanics, their data is up to you
+-- Each new mechanic will be working at all three of these dealerships:
+-- Sollowaye Autos of New York, Hrishchenko Autos of New York and Cadreman Autos of New York
+BEGIN TRANSACTION;
+
+  INSERT INTO employeetypes (name)
+  VALUES ('Automotive Mechanic')
+
+
+-- Create a transaction for:
+-- Creating a new dealership in Washington, D.C. called Felphun Automotive
+-- Hire 3 new employees for the new dealership: Sales Manager, General Manager and Customer Service.
+-- All employees that currently work at Scrogges Autos of District of Columbia will now start working at Felphun Automotive instead.
